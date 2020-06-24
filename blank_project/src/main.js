@@ -47,7 +47,7 @@ async function doWork() {
 // Function that initializes the signIn button using WalletAccount
 function signedOutFlow() {
   // Displaying the signed out flow container.
-  document.getElementById('signed-out-flow').classList.remove('d-none');
+  document.getElementById('signed-out-flow').style.display = null;
   // Adding an event to a sing-in button.
   document.getElementById('sign-in-button').addEventListener('click', () => {
     window.walletAccount.requestSignIn(
@@ -62,7 +62,7 @@ function signedOutFlow() {
 // Main function for the signed-in flow (already authorized by the wallet).
 function signedInFlow() {
   // Displaying the signed in flow container.
-  document.getElementById('signed-in-flow').classList.remove('d-none');
+  document.getElementById('signed-in-flow').style.display = null;
 
   welcome();
 
@@ -77,6 +77,9 @@ function signedInFlow() {
   document.getElementById('change-greeting').addEventListener('click', () => {
     setGreeting();
   });
+
+  const iframe = document.querySelector('iframe')
+  iframe.src = 'https://explorer.testnet.near.org/accounts/' + window.contract.contractId
 }
 
 async function setGreeting() {
