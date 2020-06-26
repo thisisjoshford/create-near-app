@@ -3,97 +3,116 @@ import "regenerator-runtime/runtime";
 import * as nearlib from "near-api-js"
 import getConfig from "./config"
 
-let nearConfig = getConfig(process.env.NODE_ENV || "development");
-window.nearConfig = nearConfig;
-const nearGreetings = ['Hello', 'Aloha', 'Bonjour'];
-let nearGreetingIndex = 0;
+const nearConfig = getConfig(process.env.NODE_ENV || "development");
+
+const submitButton = document.querySelector('form button');
+
+let currentGreeting, accountId;
 
 // Initializing contract
 async function InitContract() {
-  console.log('nearConfig', nearConfig);
-
   // Initializing connection to the NEAR testnet.
-  window.near = await nearlib.connect(Object.assign({ deps: { keyStore: new nearlib.keyStores.BrowserLocalStorageKeyStore() } }, nearConfig));
+  const near = await nearlib.connect(Object.assign({ deps: { keyStore: new nearlib.keyStores.BrowserLocalStorageKeyStore() } }, nearConfig));
 
   // Initializing Wallet based Account. It can work with NEAR testnet wallet that
   // is hosted at https://wallet.testnet.near.org
-  window.walletAccount = new nearlib.WalletAccount(window.near);
+  window.walletConnection = new nearlib.WalletConnection(near);
 
   // Getting the Account ID. If unauthorized yet, it's just empty string.
-  window.accountId = window.walletAccount.getAccountId();
+  accountId = window.walletConnection.getAccountId();
 
   // Initializing our contract APIs by contract name and configuration.
   window.contract = await near.loadContract(nearConfig.contractName, { // eslint-disable-line require-atomic-updates
     // NOTE: This configuration only needed while NEAR is still in development
     // View methods are read only. They don't modify the state, but usually return some value.
-    viewMethods: ['welcome'],
+    viewMethods: ['getGreeting'],
     // Change methods can modify the state. But you don't receive the returned value when called.
     changeMethods: ['setGreeting'],
     // Sender is the account ID to initialize transactions.
-    sender: window.accountId,
+    sender: accountId,
   });
 }
 
-// Using initialized contract
-async function doWork() {
-  // Based on whether you've authorized, checking which flow we should go.
-  if (!window.walletAccount.isSignedIn()) {
-    signedOutFlow();
+document.querySelector('form').onsubmit = async (event) => {
+  event.preventDefault();
+
+  // get elements from the form using their id attribute
+  const { fieldset, greeting } = event.target.elements;
+
+  // disable the form while the value gets updated on-chain
+  fieldset.disabled = true
+
+  // make an update call to the smart contract
+  await window.contract.setGreeting({
+    // pass the value that the user entered in the greeting field
+    message: greeting.value
+  });
+
+  // update the greeting in the UI
+  await fetchGreeting();
+
+  // re-enable the form
+  fieldset.disabled = false;
+  submitButton.disabled = true;
+}
+
+document.querySelector('input#greeting').oninput = (event) => {
+  if (event.target.value !== currentGreeting) {
+    submitButton.disabled = false;
   } else {
-    signedInFlow();
+    submitButton.disabled = true;
   }
 }
 
-// Function that initializes the signIn button using WalletAccount
+document.querySelector('#sign-out-button').onclick = () => {
+  walletConnection.signOut();
+  // Forcing redirect.
+  window.location.replace(window.location.origin + window.location.pathname);
+};
+
+document.querySelector('#sign-in-button').onclick = () => {
+  window.walletConnection.requestSignIn(
+    // The contract name that would be authorized to be called by the user's account.
+    nearConfig.contractName,
+    // This is the app name. It can be anything.
+    'Welcome to NEAR'
+  );
+};
+
+// Display the signed-out-flow container
 function signedOutFlow() {
-  // Displaying the signed out flow container.
-  document.getElementById('signed-out-flow').style.display = null;
-  // Adding an event to a sing-in button.
-  document.getElementById('sign-in-button').addEventListener('click', () => {
-    window.walletAccount.requestSignIn(
-      // The contract name that would be authorized to be called by the user's account.
-      window.nearConfig.contractName,
-      // This is the app name. It can be anything.
-      'Welcome to NEAR'
-    );
-  });
+  document.querySelector('#signed-out-flow').style.display = 'block';
 }
 
-// Main function for the signed-in flow (already authorized by the wallet).
+// Displaying the signed in flow container and fill in account-specific data
 function signedInFlow() {
-  // Displaying the signed in flow container.
-  document.getElementById('signed-in-flow').style.display = null;
+  document.querySelector('#signed-in-flow').style.display = 'block';
 
-  welcome();
-
-  // Adding an event to a sign-out button.
-  document.getElementById('sign-out-button').addEventListener('click', () => {
-    walletAccount.signOut();
-    // Forcing redirect.
-    window.location.replace(window.location.origin + window.location.pathname);
+  document.querySelectorAll('[data-behavior=account-id]').forEach(el => {
+    el.innerText = accountId;
   });
 
-  // Adding an event to change greeting button.
-  document.getElementById('change-greeting').addEventListener('click', () => {
-    setGreeting();
+  fetchGreeting();
+}
+
+async function fetchGreeting() {
+  currentGreeting = await window.contract.getGreeting({ accountId });
+  document.querySelectorAll('[data-behavior=greeting]').forEach(el => {
+    // set divs, spans, etc
+    el.innerText = currentGreeting;
+
+    // set input elements
+    el.value = currentGreeting;
   });
-
-  const iframe = document.querySelector('iframe')
-  iframe.src = 'https://explorer.testnet.near.org/accounts/' + window.contract.contractId
-}
-
-async function setGreeting() {
-    nearGreetingIndex = (nearGreetingIndex + 1) % nearGreetings.length;
-    await window.contract.setGreeting({message: nearGreetings[nearGreetingIndex]});
-    welcome();
-}
-
-async function welcome() {
-  const response = await window.contract.welcome({account_id:window.accountId});
-  document.getElementById('speech').innerText = response.text;
 }
 
 // Loads nearlib and this contract into window scope.
 window.nearInitPromise = InitContract()
-  .then(doWork)
+  .then(() => {
+    if (!window.walletConnection.isSignedIn()) {
+      signedOutFlow();
+    } else {
+      signedInFlow();
+    }
+  })
   .catch(console.error);
