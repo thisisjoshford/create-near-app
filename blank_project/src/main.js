@@ -51,6 +51,15 @@ document.querySelector('form').onsubmit = async (event) => {
   // update the greeting in the UI
   await fetchGreeting();
 
+  // show spoofed notification
+  document.querySelector("[data-behavior=notification]").style.display = "block";
+
+  // remove spoofed notification again after css animation completes
+  // this allows it to be shown again next time the form is submitted
+  setTimeout(() => {
+    document.querySelector("[data-behavior=notification]").style.display = "none";
+  }, 11000)
+
   // re-enable the form
   fieldset.disabled = false;
   submitButton.disabled = true;
@@ -91,6 +100,14 @@ function signedInFlow() {
   document.querySelectorAll('[data-behavior=account-id]').forEach(el => {
     el.innerText = accountId;
   });
+
+  // populate links in the notification box
+  const accountLink = document.querySelector('[data-behavior=notification] a:nth-of-type(1)');
+  accountLink.href = accountLink.href + accountId;
+  accountLink.innerText = '@' + accountId;
+  const contractLink = document.querySelector('[data-behavior=notification] a:nth-of-type(2)');
+  contractLink.href = contractLink.href + contract.contractId;
+  contractLink.innerText = '@' + contract.contractId;
 
   fetchGreeting();
 }

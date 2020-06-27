@@ -15,9 +15,9 @@
       --gray: #555;
       --light-gray: #ccc;
       --shadow: #e6e6e6;
+      --success: rgb(90, 206, 132);
       --primary: #FF585D;
       --secondary: #0072CE;
-      --tertiary: #8FD6BD;
 
       background-color: var(--bg);
       color: var(--fg);
@@ -136,6 +136,37 @@
       padding-bottom: 1em;
     }
 
+    aside {
+      animation: notify ease-in-out 10s;
+      background-color: var(--shadow);
+      border-radius: 5px;
+      bottom: 0;
+      font-size: 0.8em;
+      margin: 1em;
+      padding: 1em;
+      position: fixed;
+      transform: translateY(10em);
+      right: 0;
+    }
+    aside footer {
+      display: flex;
+      font-size: 0.9em;
+      justify-content: space-between;
+      margin-top: 0.5em;
+    }
+    aside footer *:first-child {
+      color: var(--success);
+    }
+    aside footer *:last-child {
+      color: var(--gray);
+    }
+    @keyframes notify {
+      0% { transform: translateY(10em) }
+      5% { transform: translateY(0) }
+      95% { transform: translateY(0) }
+      100% { transform: translateY(10em) }
+    }
+
     @media (prefers-color-scheme: dark) {
       html {
         --bg: #1e1e1e;
@@ -219,7 +250,7 @@
           <code>assembly/main.ts</code> – this is the source code for your
           <a target="_blank" href="https://docs.near.org/docs/roles/developer/contracts/intro">smart contract</a>.
           It will look pretty approachable if you're familiar with JavaScript or TypeScript (it's actually
-          <a href="https://docs.near.org/docs/roles/developer/contracts/assemblyscript" target="_blank">AssemblyScript</a>).
+          <a target="_blank" href="https://docs.near.org/docs/roles/developer/contracts/assemblyscript" target="_blank">AssemblyScript</a>).
         </li>
         <li>
           When you run <code>yarn dev</code>, the code in
@@ -228,10 +259,6 @@
           <code>scripts</code> section to find the <code>dev</code> command.
         </li>
       </ol>
-      <p>
-        TODO: show transactions, link to <a target="_blank"
-        href="https://explorer.testnet.near.org/">NEAR Explorer</a>
-      </p>
       <hr>
       <p>
         To keep learning, check out
@@ -241,6 +268,16 @@
       </p>
     </main>
   </div>
+
+  <aside data-behavior="notification" style="display: none">
+    <a target="_blank" href="https://explorer.testnet.near.org/accounts/"></a>
+    called method: 'setGreeting' in contract:
+    <a target="_blank" href="https://explorer.testnet.near.org/accounts/"></a>
+    <footer>
+      <div>✔ Succeeded</div>
+      <div>Just now</div>
+    </footer>
+  </aside>
 
   <script src="./main.js"></script>
 </body>
