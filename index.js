@@ -8,7 +8,6 @@ const fs = require('fs');
 const spawn = require('cross-spawn');
 const chalk = require('chalk');
 const which = require('which');
-const { execSync } = require('child_process');
 
 const exitOnError = async function(promise) {
     try {
@@ -79,10 +78,10 @@ const doCreateProject = async function(options) {
     const contractTargetDir = `${projectDir}/${options.rust? 'contract' : 'assembly'}`;
     const contractSourceDir = `${__dirname}/common/${options.rust? 'rust' : 'asc'}`;
     console.log(`Copying contract files to new project directory (${contractTargetDir}) from source (${contractSourceDir}).`);
-    execSync(`cp -R ${contractSourceDir} ${contractTargetDir}`);
+    await ncp(contractSourceDir, contractTargetDir);
 
     // copy common frontend files
-    execSync(`cp ${__dirname}/common/frontend/* ${projectDir}/src/`);
+    await ncp(`${__dirname}/common/frontend`, `${projectDir}/src`);
 
     await renameFile(`${projectDir}/near.gitignore`, `${projectDir}/.gitignore`);
     console.log('Copying project files complete.\n');
