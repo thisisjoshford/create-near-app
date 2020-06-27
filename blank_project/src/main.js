@@ -1,135 +1,78 @@
-import "regenerator-runtime/runtime";
+import 'regenerator-runtime/runtime'
 
-import * as nearlib from "near-api-js"
-import getConfig from "./config"
+import { initContract, login, logout, onSubmit } from './utils'
 
-const nearConfig = getConfig(process.env.NODE_ENV || "development");
+// global variable used throughout
+let currentGreeting
 
-const submitButton = document.querySelector('form button');
-
-let currentGreeting, accountId;
-
-// Initializing contract
-async function InitContract() {
-  // Initializing connection to the NEAR testnet.
-  const near = await nearlib.connect(Object.assign({ deps: { keyStore: new nearlib.keyStores.BrowserLocalStorageKeyStore() } }, nearConfig));
-
-  // Initializing Wallet based Account. It can work with NEAR testnet wallet that
-  // is hosted at https://wallet.testnet.near.org
-  window.walletConnection = new nearlib.WalletConnection(near);
-
-  // Getting the Account ID. If unauthorized yet, it's just empty string.
-  accountId = window.walletConnection.getAccountId();
-
-  // Initializing our contract APIs by contract name and configuration.
-  window.contract = await near.loadContract(nearConfig.contractName, { // eslint-disable-line require-atomic-updates
-    // NOTE: This configuration only needed while NEAR is still in development
-    // View methods are read only. They don't modify the state, but usually return some value.
-    viewMethods: ['getGreeting'],
-    // Change methods can modify the state. But you don't receive the returned value when called.
-    changeMethods: ['setGreeting'],
-    // Sender is the account ID to initialize transactions.
-    sender: accountId,
-  });
-}
-
-document.querySelector('form').onsubmit = async (event) => {
-  event.preventDefault();
-
-  // get elements from the form using their id attribute
-  const { fieldset, greeting } = event.target.elements;
-
-  // disable the form while the value gets updated on-chain
-  fieldset.disabled = true
-
-  // make an update call to the smart contract
-  await window.contract.setGreeting({
-    // pass the value that the user entered in the greeting field
-    message: greeting.value
-  });
+document.querySelector('form').onsubmit = async () => {
+  // deal with form; persist data to blockchain
+  await onSubmit()
 
   // update the greeting in the UI
-  await fetchGreeting();
+  await fetchGreeting()
 
   // show spoofed notification
-  document.querySelector("[data-behavior=notification]").style.display = "block";
+  document.querySelector('[data-behavior=notification]').style.display = 'block';
 
   // remove spoofed notification again after css animation completes
   // this allows it to be shown again next time the form is submitted
   setTimeout(() => {
-    document.querySelector("[data-behavior=notification]").style.display = "none";
+    document.querySelector('[data-behavior=notification]').style.display = 'none';
   }, 11000)
-
-  // re-enable the form
-  fieldset.disabled = false;
-  submitButton.disabled = true;
 }
 
 document.querySelector('input#greeting').oninput = (event) => {
   if (event.target.value !== currentGreeting) {
-    submitButton.disabled = false;
+    submitButton.disabled = false
   } else {
-    submitButton.disabled = true;
+    submitButton.disabled = true
   }
 }
 
-document.querySelector('#sign-out-button').onclick = () => {
-  walletConnection.signOut();
-  // Forcing redirect.
-  window.location.replace(window.location.origin + window.location.pathname);
-};
-
-document.querySelector('#sign-in-button').onclick = () => {
-  window.walletConnection.requestSignIn(
-    // The contract name that would be authorized to be called by the user's account.
-    nearConfig.contractName,
-    // This is the app name. It can be anything.
-    'Welcome to NEAR'
-  );
-};
+document.querySelector('#sign-in-button').onclick = login
+document.querySelector('#sign-out-button').onclick = logout
 
 // Display the signed-out-flow container
 function signedOutFlow() {
-  document.querySelector('#signed-out-flow').style.display = 'block';
+  document.querySelector('#signed-out-flow').style.display = 'block'
 }
 
 // Displaying the signed in flow container and fill in account-specific data
 function signedInFlow() {
-  document.querySelector('#signed-in-flow').style.display = 'block';
+  document.querySelector('#signed-in-flow').style.display = 'block'
 
   document.querySelectorAll('[data-behavior=account-id]').forEach(el => {
-    el.innerText = accountId;
-  });
+    el.innerText = accountId
+  })
 
   // populate links in the notification box
-  const accountLink = document.querySelector('[data-behavior=notification] a:nth-of-type(1)');
-  accountLink.href = accountLink.href + accountId;
-  accountLink.innerText = '@' + accountId;
-  const contractLink = document.querySelector('[data-behavior=notification] a:nth-of-type(2)');
-  contractLink.href = contractLink.href + contract.contractId;
-  contractLink.innerText = '@' + contract.contractId;
+  const accountLink = document.querySelector('[data-behavior=notification] a:nth-of-type(1)')
+  accountLink.href = accountLink.href + accountId
+  accountLink.innerText = '@' + accountId
+  const contractLink = document.querySelector('[data-behavior=notification] a:nth-of-type(2)')
+  contractLink.href = contractLink.href + contract.contractId
+  contractLink.innerText = '@' + contract.contractId
 
-  fetchGreeting();
+  fetchGreeting()
 }
 
+// update global currentGreeting variable; update DOM with it
 async function fetchGreeting() {
-  currentGreeting = await window.contract.getGreeting({ accountId });
+  currentGreeting = await contract.getGreeting({ accountId })
   document.querySelectorAll('[data-behavior=greeting]').forEach(el => {
     // set divs, spans, etc
-    el.innerText = currentGreeting;
+    el.innerText = currentGreeting
 
     // set input elements
-    el.value = currentGreeting;
-  });
+    el.value = currentGreeting
+  })
 }
 
-// Loads nearlib and this contract into window scope.
-window.nearInitPromise = InitContract()
+// `nearInitPromise` gets called on page load
+window.nearInitPromise = initContract()
   .then(() => {
-    if (!window.walletConnection.isSignedIn()) {
-      signedOutFlow();
-    } else {
-      signedInFlow();
-    }
+    if (walletConnection.isSignedIn()) signedInFlow()
+    else signedOutFlow()
   })
-  .catch(console.error);
+  .catch(console.error)
