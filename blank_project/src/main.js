@@ -52,8 +52,8 @@ function signedInFlow() {
   accountLink.href = accountLink.href + window.accountId
   accountLink.innerText = '@' + window.accountId
   const contractLink = document.querySelector('[data-behavior=notification] a:nth-of-type(2)')
-  contractLink.href = contractLink.href + contract.contractId
-  contractLink.innerText = '@' + contract.contractId
+  contractLink.href = contractLink.href + window.contract.contractId
+  contractLink.innerText = '@' + window.contract.contractId
 
   fetchGreeting()
 }
