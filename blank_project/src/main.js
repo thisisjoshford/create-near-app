@@ -44,13 +44,13 @@ function signedInFlow() {
   document.querySelector('#signed-in-flow').style.display = 'block'
 
   document.querySelectorAll('[data-behavior=account-id]').forEach(el => {
-    el.innerText = accountId
+    el.innerText = window.accountId
   })
 
   // populate links in the notification box
   const accountLink = document.querySelector('[data-behavior=notification] a:nth-of-type(1)')
-  accountLink.href = accountLink.href + accountId
-  accountLink.innerText = '@' + accountId
+  accountLink.href = accountLink.href + window.accountId
+  accountLink.innerText = '@' + window.accountId
   const contractLink = document.querySelector('[data-behavior=notification] a:nth-of-type(2)')
   contractLink.href = contractLink.href + contract.contractId
   contractLink.innerText = '@' + contract.contractId
@@ -60,7 +60,7 @@ function signedInFlow() {
 
 // update global currentGreeting variable; update DOM with it
 async function fetchGreeting() {
-  currentGreeting = await contract.getGreeting({ accountId })
+  currentGreeting = await contract.getGreeting({ accountId: window.accountId })
   document.querySelectorAll('[data-behavior=greeting]').forEach(el => {
     // set divs, spans, etc
     el.innerText = currentGreeting
@@ -73,7 +73,7 @@ async function fetchGreeting() {
 // `nearInitPromise` gets called on page load
 window.nearInitPromise = initContract()
   .then(() => {
-    if (walletConnection.isSignedIn()) signedInFlow()
+    if (window.walletConnection.isSignedIn()) signedInFlow()
     else signedOutFlow()
   })
   .catch(console.error)

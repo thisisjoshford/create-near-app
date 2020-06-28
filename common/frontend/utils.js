@@ -13,7 +13,7 @@ export async function initContract() {
   window.walletConnection = new WalletConnection(near)
 
   // Getting the Account ID. If still unauthorized, it's just empty string
-  window.accountId = walletConnection.getAccountId()
+  window.accountId = window.walletConnection.getAccountId()
 
   // Initializing our contract APIs by contract name and configuration
   window.contract = await near.loadContract(nearConfig.contractName, { // eslint-disable-line require-atomic-updates
@@ -22,7 +22,7 @@ export async function initContract() {
     // Change methods can modify the state. But you don't receive the returned value when called.
     changeMethods: ['setGreeting'],
     // Sender is the account ID to initialize transactions.
-    sender: accountId,
+    sender: window.accountId,
   })
 }
 
@@ -51,13 +51,13 @@ export async function onSubmit(event) {
 }
 
 export function logout() {
-  walletConnection.signOut()
+  window.walletConnection.signOut()
   // reload page
   window.location.replace(window.location.origin + window.location.pathname)
 }
 
 export function login() {
-  walletConnection.requestSignIn(
+  window.walletConnection.requestSignIn(
     // The contract name that would be authorized to be called by the user's account.
     nearConfig.contractName,
     // This is the app name. It can be anything.
