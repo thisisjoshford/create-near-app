@@ -5,9 +5,9 @@ import { initContract, login, logout, onSubmit } from './utils'
 // global variable used throughout
 let currentGreeting
 
-document.querySelector('form').onsubmit = async () => {
+document.querySelector('form').onsubmit = async (event) => {
   // deal with form; persist data to blockchain
-  await onSubmit()
+  await onSubmit(event)
 
   // update the greeting in the UI
   await fetchGreeting()
@@ -23,6 +23,7 @@ document.querySelector('form').onsubmit = async () => {
 }
 
 document.querySelector('input#greeting').oninput = (event) => {
+  const submitButton = document.querySelector('form button')
   if (event.target.value !== currentGreeting) {
     submitButton.disabled = false
   } else {
