@@ -1,15 +1,12 @@
+// smart contract source code, written in Rust
+// for more info: https://docs.near.org/docs/roles/developer/contracts/near-sdk-rs
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::{env, near_bindgen};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[derive(Serialize, Deserialize)]
-pub struct TextMessage {
-    text: String
-}
 
 #[near_bindgen]
 #[derive(Default, BorshDeserialize, BorshSerialize)]
@@ -24,13 +21,13 @@ impl Welcome {
         self.records.insert(account_id, message);
     }
 
-    pub fn welcome(&self, account_id: String) -> TextMessage {
+    pub fn get_greeting(&self, account_id: String) -> String {
         match self.records.get(&account_id) {
             None => {
                 env::log(b"Using default message.");
-                return TextMessage { text: format!("Hello {}", account_id) }
-            },
-            _ => return TextMessage { text: format!("{} {}", self.records.get(&account_id).unwrap(), account_id) }
+                "Hello".to_string()
+            }
+            _ => self.records.get(&account_id).unwrap().to_string(),
         }
     }
 }
@@ -68,7 +65,10 @@ mod tests {
         testing_env!(context);
         let mut contract = Welcome::default();
         contract.set_greeting("howdy".to_string());
-        assert_eq!("howdy bob_near".to_string(), contract.welcome("bob_near".to_string()).text);
+        assert_eq!(
+            "howdy".to_string(),
+            contract.get_greeting("bob_near".to_string())
+        );
     }
 
     #[test]
@@ -76,6 +76,9 @@ mod tests {
         let context = get_context(vec![], true);
         testing_env!(context);
         let contract = Welcome::default();
-        assert_eq!("Hello francis.near".to_string(), contract.welcome("francis.near".to_string()).text);
+        assert_eq!(
+            "Hello".to_string(),
+            contract.get_greeting("francis.near".to_string())
+        );
     }
 }

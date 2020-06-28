@@ -44,9 +44,7 @@ const renameFile = async function(oldPath, newPath) {
 };
 
 const doCreateProject = async function(options) {
-    const rustPiece = options.rust ? '_rust' : '';
-    const reactPiece = options.vanilla ? '' : '_react';
-    const templateDir = `/blank${rustPiece}${reactPiece}_project`;
+    const templateDir = `/templates/${options.react ? 'react' : 'vanilla'}`;
     const projectDir = options.projectDir;
     const sourceTemplateDir = __dirname + templateDir;
 
@@ -83,6 +81,12 @@ const doCreateProject = async function(options) {
     // copy common frontend files
     await ncp(`${__dirname}/common/frontend`, `${projectDir}/src`);
     await ncp(`${__dirname}/common/assets`, `${projectDir}/src/assets`);
+
+    if (options.rust) {
+        await replaceInFiles({ files: `${projectDir}/src/*`, from: 'getGreeting', to: 'get_greeting' });
+        await replaceInFiles({ files: `${projectDir}/src/*`, from: 'setGreeting', to: 'set_greeting' });
+        await replaceInFiles({ files: `${projectDir}/src/*`, from: 'assembly/main.ts', to: 'contract/src/lib.rs' });
+    }
 
     await renameFile(`${projectDir}/near.gitignore`, `${projectDir}/.gitignore`);
     console.log('Copying project files complete.\n');
@@ -123,8 +127,8 @@ Happy hacking!
 };
 
 yargs
-    .option('vanilla',{
-        desc: 'create blank plain JS project',
+    .option('react',{
+        desc: 'create blank React project',
         type: 'boolean',
         default: false
     })
