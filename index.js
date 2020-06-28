@@ -82,6 +82,7 @@ const doCreateProject = async function(options) {
 
     // copy common frontend files
     await ncp(`${__dirname}/common/frontend`, `${projectDir}/src`);
+    await ncp(`${__dirname}/common/assets`, `${projectDir}/src/assets`);
 
     await renameFile(`${projectDir}/near.gitignore`, `${projectDir}/.gitignore`);
     console.log('Copying project files complete.\n');
