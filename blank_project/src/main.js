@@ -6,16 +6,17 @@ import { initContract, login, logout, onSubmit } from './utils'
 let currentGreeting
 
 document.querySelector('form').onsubmit = async (event) => {
-  // deal with form; persist data to blockchain
+  // fire frontend-agnostic submit behavior, including data persistence
+  // look in utils.js to see how this updates data on-chain!
   await onSubmit(event)
 
   // update the greeting in the UI
   await fetchGreeting()
 
-  // show spoofed notification
+  // show notification
   document.querySelector('[data-behavior=notification]').style.display = 'block';
 
-  // remove spoofed notification again after css animation completes
+  // remove notification again after css animation completes
   // this allows it to be shown again next time the form is submitted
   setTimeout(() => {
     document.querySelector('[data-behavior=notification]').style.display = 'none';

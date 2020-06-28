@@ -47,7 +47,7 @@ export async function onSubmit(event) {
   fieldset.disabled = false
 
   // disable the save button, since it now matches the persisted value
-  event.target.querySelector('button').disabled = true
+  document.querySelector('form button').disabled = true
 }
 
 export function logout() {

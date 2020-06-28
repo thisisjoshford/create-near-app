@@ -3,24 +3,20 @@ import React from 'react';
 import renderer from 'react-test-renderer';
 import App from './App';
 
-let near;
-let contract;
-let accountId;
-let walletConnection
 beforeAll(async function () {
     // NOTE: nearlib and nearConfig are made available by near-shell/test_environment
     console.log('nearConfig', nearConfig);
-    near = await nearlib.connect(nearConfig);
-    accountId = nearConfig.contractName;
-    contract = await near.loadContract(nearConfig.contractName, {
-        viewMethods: ['welcome'],
+    const near = await nearlib.connect(nearConfig);
+    window.accountId = nearConfig.contractName;
+    window.contract = await near.loadContract(nearConfig.contractName, {
+        viewMethods: ['getGreeting'],
         changeMethods: [],
         sender: accountId
     });
 
     // Fake instance of WalletConnection
     // Feel free to modify for specific tests
-    walletConnection = {
+    window.walletConnection = {
       requestSignIn() {
       },
       signOut() {
@@ -35,7 +31,7 @@ beforeAll(async function () {
 });
 
 it('renders without crashing', () => {
-  const app = renderer.create(<App contract={contract} wallet={walletConnection}/>);
+  const app = renderer.create(<App />);
   let tree = app.toJSON();
   expect(tree).toMatchSnapshot();
 });
